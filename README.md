@@ -11,5 +11,6 @@ Numerical Tours is a collection of Jupyter notebooks covering various algorithmi
 ## GIS:
 
 - Adaptive mesh around a road network
+- BD Alti - High-Resolution Elevation Dataset for France
 - NetCDF4 compression with xarray
 - Rasterizing a larger than memory GPKG file
