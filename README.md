@@ -13,5 +13,5 @@ Numerical Tours is a collection of Jupyter notebooks covering various algorithmi
 - Adaptive mesh around a road network
 - BD Alti - High-Resolution Elevation Dataset for France
 - NetCDF4 compression with xarray
-- Rasterizing a larger than memory GPKG file
 - Query GoogleMaps satellites tiles from given coordinates and zoom level
+- Rasterizing a larger than memory GPKG file
