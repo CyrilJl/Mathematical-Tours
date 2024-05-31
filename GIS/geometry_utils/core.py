@@ -23,7 +23,6 @@ def proj(x: Union[float, int, Iterable[float]],
     Returns:
         Tuple[Iterable[float], Iterable[float]]: The projected coordinates (x, y).
     """
-
     t = pyproj.Transformer.from_crs(crs_from=to_crs(proj_in), crs_to=to_crs(proj_out), always_xy=True)
     return t.transform(x, y)
 
