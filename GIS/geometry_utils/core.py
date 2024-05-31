@@ -3,7 +3,59 @@ from typing import Generator
 import geopandas as gpd
 import numpy as np
 from shapely.geometry import Polygon
+import pyproj
+from typing import Union, Iterable, Tuple
 
+
+def proj(x: Union[float, int, Iterable[float]],
+         y: Union[float, int, Iterable[float]],
+         proj_in: Union[str, int, pyproj.CRS],
+         proj_out: Union[str, int, pyproj.CRS]) -> Tuple[Iterable[float], Iterable[float]]:
+    """
+    Projette des coordonnées d'un système de coordonnées à un autre.
+
+    Args:
+        x (Union[float, int, Iterable[float]]): Coordonnées en x à projeter.
+        y (Union[float, int, Iterable[float]]): Coordonnées en y à projeter.
+        proj_in (Union[str, int, pyproj.CRS]): Le système de coordonnées d'entrée.
+        proj_out (Union[str, int, pyproj.CRS]): Le système de coordonnées de sortie.
+
+    Returns:
+        Tuple[Iterable[float], Iterable[float]]: Les coordonnées projetées (x, y).
+    """
+
+    t = pyproj.Transformer.from_crs(crs_from=to_crs(proj_in), crs_to=to_crs(proj_out), always_xy=True)
+    return t.transform(x, y)
+
+
+def to_crs(proj: Union[str, int, pyproj.CRS, pyproj.Proj, None]) -> pyproj.CRS:
+    """
+    Convertit un système de coordonnées en objet pyproj.CRS.
+
+    Args:
+        proj (Union[str, int, pyproj.CRS, pyproj.Proj, None]): Le système de coordonnées à convertir.
+
+    Returns:
+        pyproj.CRS: L'objet pyproj.CRS correspondant au système de coordonnées spécifié.
+
+    Example:
+        .. code-block:: python
+
+            to_crs('EPSG:4326')
+            >>> <pyproj.CRS ...>
+
+            to_crs(27572)
+            >>> <pyproj.CRS ...>
+    """
+    if isinstance(proj, (int, str)):
+        return pyproj.CRS(proj)
+    if isinstance(proj, pyproj.CRS):
+        return proj
+    if isinstance(proj, pyproj.Proj):
+        return proj.crs
+    if proj is None:
+        return None
+    raise TypeError("Le format de `proj` n'est pas reconnu !")
 
 def covering_mesh(gdf: gpd.GeoDataFrame, cell_size: float, return_xy: bool = False, round: int = None, return_indices: bool = False) -> gpd.GeoDataFrame:
     """
@@ -120,3 +172,55 @@ def generator_geopandas(path: str, batch_size: int = 25_000, max_row: int = None
 
         i += batch_size
         j += batch_size
+
+
+def get_coordinates(place, crs=4326, retries=10, retry_delay=1, errors='raise'):
+    """
+    Obtains the geographical coordinates (longitude, latitude) of a given place.
+
+    Args:
+        place (Union[str, Iterable[str]]): Name of the place or list of place names.
+        crs (Union[str, int, pyproj.CRS], optional): The projection to use for the coordinates.
+                                                     Default: 4326 (WGS 84).
+        retries (int, optional): The number of attempts in case of failure. Default: 5.
+        retry_delay (int, optional): The delay between each attempt in seconds. Default: 1.
+
+    Returns:
+        Union[Tuple[float, float], List[Tuple[float, float]]]:
+            - Tuple[float, float]: Geographical coordinates (longitude, latitude) of the place.
+            - List[Tuple[float, float]]: List of geographical coordinates of each place.
+
+    Example:
+        .. code-block:: python
+
+            get_coordinates("Paris")
+            >>> (2.3488, 48.85341)
+
+            places = ["Paris", "Lyon", "Marseille"]
+            get_coordinates(places)
+            >>> [(2.3488, 48.85341), (4.8357, 45.76404), (5.36978, 43.29695)]
+    """
+    from geopy.geocoders import Nominatim
+    geolocator = Nominatim(user_agent='airparif')
+    results = []
+
+    def get_coordinates_single(place):
+        for _ in range(retries):
+            try:
+                location = geolocator.geocode(place)
+                if location:
+                    return proj(location.longitude, location.latitude, 4326, crs)
+            except Exception:
+                pass
+            sleep(retry_delay)
+        if errors == 'ignore':
+            return (np.nan, np.nan)
+        else:
+            raise ValueError(f"Échec de la récupération des coordonnées de '{place}'")
+
+    if isinstance(place, str):
+        return get_coordinates_single(place)
+    else:
+        for p in place:
+            results.append(get_coordinates_single(p))
+        return results
