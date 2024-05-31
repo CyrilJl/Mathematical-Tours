@@ -1,10 +1,10 @@
-from typing import Generator
+from time import sleep
+from typing import Generator, Iterable, Tuple, Union
 
 import geopandas as gpd
 import numpy as np
-from shapely.geometry import Polygon
 import pyproj
-from typing import Union, Iterable, Tuple
+from shapely.geometry import Polygon
 
 
 def proj(x: Union[float, int, Iterable[float]],
@@ -12,16 +12,16 @@ def proj(x: Union[float, int, Iterable[float]],
          proj_in: Union[str, int, pyproj.CRS],
          proj_out: Union[str, int, pyproj.CRS]) -> Tuple[Iterable[float], Iterable[float]]:
     """
-    Projette des coordonnées d'un système de coordonnées à un autre.
+    Projects coordinates from one coordinate system to another.
 
     Args:
-        x (Union[float, int, Iterable[float]]): Coordonnées en x à projeter.
-        y (Union[float, int, Iterable[float]]): Coordonnées en y à projeter.
-        proj_in (Union[str, int, pyproj.CRS]): Le système de coordonnées d'entrée.
-        proj_out (Union[str, int, pyproj.CRS]): Le système de coordonnées de sortie.
+        x (Union[float, int, Iterable[float]]): x-coordinates to be projected.
+        y (Union[float, int, Iterable[float]]): y-coordinates to be projected.
+        proj_in (Union[str, int, pyproj.CRS]): The input coordinate system.
+        proj_out (Union[str, int, pyproj.CRS]): The output coordinate system.
 
     Returns:
-        Tuple[Iterable[float], Iterable[float]]: Les coordonnées projetées (x, y).
+        Tuple[Iterable[float], Iterable[float]]: The projected coordinates (x, y).
     """
 
     t = pyproj.Transformer.from_crs(crs_from=to_crs(proj_in), crs_to=to_crs(proj_out), always_xy=True)
@@ -30,13 +30,13 @@ def proj(x: Union[float, int, Iterable[float]],
 
 def to_crs(proj: Union[str, int, pyproj.CRS, pyproj.Proj, None]) -> pyproj.CRS:
     """
-    Convertit un système de coordonnées en objet pyproj.CRS.
+    Converts a coordinate system to a pyproj.CRS object.
 
     Args:
-        proj (Union[str, int, pyproj.CRS, pyproj.Proj, None]): Le système de coordonnées à convertir.
+        proj (Union[str, int, pyproj.CRS, pyproj.Proj, None]): The coordinate system to convert.
 
     Returns:
-        pyproj.CRS: L'objet pyproj.CRS correspondant au système de coordonnées spécifié.
+        pyproj.CRS: The pyproj.CRS object corresponding to the specified coordinate system.
 
     Example:
         .. code-block:: python
@@ -55,7 +55,8 @@ def to_crs(proj: Union[str, int, pyproj.CRS, pyproj.Proj, None]) -> pyproj.CRS:
         return proj.crs
     if proj is None:
         return None
-    raise TypeError("Le format de `proj` n'est pas reconnu !")
+    raise TypeError("`proj` type is not supported.")
+
 
 def covering_mesh(gdf: gpd.GeoDataFrame, cell_size: float, return_xy: bool = False, round: int = None, return_indices: bool = False) -> gpd.GeoDataFrame:
     """
