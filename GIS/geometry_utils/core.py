@@ -201,7 +201,7 @@ def get_coordinates(place, crs=4326, retries=10, retry_delay=1, errors='raise'):
             >>> [(2.3488, 48.85341), (4.8357, 45.76404), (5.36978, 43.29695)]
     """
     from geopy.geocoders import Nominatim
-    geolocator = Nominatim(user_agent='airparif')
+    geolocator = Nominatim(user_agent='CyrilJl')
     results = []
 
     def get_coordinates_single(place):
